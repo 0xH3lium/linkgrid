@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}LinkGrid · Links and text, shortened{% endblock %}
+
+{% block content %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-stack">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ 'error' if category == 'error' else 'success' }}" role="status">
+            <span class="flash-dot" aria-hidden="true"></span>
+            <span>{{ message }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <section class="masthead">
+    <div class="hero">
+      <p class="eyebrow"><span></span> A small link &amp; text shortener</p>
+      <h1>Make it<br><span class="highlight">shareable.</span></h1>
+      <p class="lede">
+        Paste a long URL or a block of text. Get a tidy link on
+        <strong>{{ short_base }}</strong>, and keep every visit in one clear place.
+      </p>
+      <div class="hero-note">
+        <span class="note-mark" aria-hidden="true">↳</span>
+        Links and text. Same grid, less clutter.
+      </div>
+    </div>
+
+    <section class="create-card" aria-labelledby="create-heading">
+      <div class="card-heading">
+        <div>
+          <p class="card-kicker">{{ 'New text' if mode == 'text' else 'New link' }}</p>
+          <h2 id="create-heading">{{ 'Share text' if mode == 'text' else 'Shorten a URL' }}</h2>
+        </div>
+        <span class="step-label">Paste · shorten · share</span>
+      </div>
+
+      <nav class="share-tabs" aria-label="Choose what to share">
+        <a class="share-tab{{ ' is-active' if mode == 'url' else '' }}" href="{{ url_for('index', mode='url') }}"{% if mode == 'url' %} aria-current="page"{% endif %}>
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M8.5 11.5 11.5 8.5M7 13H5.8a3.5 3.5 0 0 1 0-7H7M13 7h1.2a3.5 3.5 0 1 1 0 7H13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span>Link</span>
+        </a>
+        <a class="share-tab{{ ' is-active' if mode == 'text' else '' }}" href="{{ url_for('index', mode='text') }}"{% if mode == 'text' %} aria-current="page"{% endif %}>
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M4 5.5h12M4 10h9M4 14.5h7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span>Text</span>
+        </a>
+      </nav>
+
+      {% if mode == 'text' %}
+        <form class="shorten-form" method="post" action="{{ url_for('create_text') }}">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+          <div class="field">
+            <label for="text">Text to share</label>
+            <textarea
+              id="text"
+              name="text"
+              rows="7"
+              placeholder="Paste a note, a code snippet, or anything worth sharing…"
+              maxlength="{{ config['MAX_TEXT_LENGTH'] }}"
+              required
+              autofocus
+            >{{ form.get('text', '') }}</textarea>
+            <p class="field-help">Plain text · up to {{ config['MAX_TEXT_LENGTH'] }} characters</p>
+          </div>
+
+          <div class="field">
+            <div class="label-row">
+              <label for="text-code">Custom ending</label>
+              <span>optional</span>
+            </div>
+            <input
+              id="text-code"
+              name="code"
+              type="text"
+              value="{{ form.get('code', '') }}"
+              placeholder="team-note"
+              pattern="[A-Za-z0-9_-]{2,32}"
+              maxlength="32"
+              autocomplete="off"
+              spellcheck="false"
+              aria-describedby="text-code-help"
+            >
+            <p class="field-help" id="text-code-help">{{ short_base }}/your-code · letters, numbers, - or _ · saved lowercase</p>
+          </div>
+
+          <button class="primary-button" type="submit">
+            <span>Create text link</span>
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </form>
+      {% else %}
+        <form class="shorten-form" method="post" action="{{ url_for('create_link') }}">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+          <div class="field">
+            <label for="url">Destination URL</label>
+            <input
+              id="url"
+              name="url"
+              type="url"
+              value="{{ form.get('url', '') }}"
+              placeholder="https://example.com/a/very/long/path"
+              autocomplete="url"
+              spellcheck="false"
+              required
+              autofocus
+            >
+          </div>
+
+          <div class="field">
+            <div class="label-row">
+              <label for="url-code">Custom ending</label>
+              <span>optional</span>
+            </div>
+            <input
+              id="url-code"
+              name="code"
+              type="text"
+              value="{{ form.get('code', '') }}"
+              placeholder="launch-notes"
+              pattern="[A-Za-z0-9_-]{2,32}"
+              maxlength="32"
+              autocomplete="off"
+              spellcheck="false"
+              aria-describedby="url-code-help"
+            >
+            <p class="field-help" id="url-code-help">{{ short_base }}/your-code · letters, numbers, - or _ · saved lowercase</p>
+          </div>
+
+          <button class="primary-button" type="submit">
+            <span>Shorten link</span>
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </form>
+      {% endif %}
+    </section>
+  </section>
+
+  <section class="links-section" aria-labelledby="shares-heading">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow"><span></span> The grid</p>
+        <h2 id="shares-heading">Your shares</h2>
+      </div>
+      <span class="link-count">{{ shares|length }} share{{ '' if shares|length == 1 else 's' }}</span>
+    </div>
+
+    {% if shares %}
+      <div class="link-table">
+        <div class="link-table-head" aria-hidden="true">
+          <span>Short link</span>
+          <span>Preview</span>
+          <span>Activity</span>
+          <span>Created</span>
+          <span class="actions-heading">Actions</span>
+        </div>
+
+        {% for share in shares %}
+          {% set is_text = share['kind'] == 'text' %}
+          {% set activity = 'view' if is_text else 'click' %}
+          {% set preview = share['text_content']|excerpt(180) if is_text else share['target_url'] %}
+          <article class="link-row{{ ' is-new' if share['code'] == created else '' }}">
+            <div class="short-cell">
+              {% if is_text %}
+                <span class="kind-badge">Text</span>
+              {% endif %}
+              <a class="short-link" href="{{ url_for('follow_code', code=share['code']) }}">
+                <span class="host">{{ short_base }}/</span><span class="code">{{ share['code'] }}</span>
+              </a>
+              {% if share['code'] == created %}
+                <span class="new-badge">New</span>
+              {% endif %}
+            </div>
+
+            <div class="destination{{ ' text-preview' if is_text else '' }}" title="{{ preview }}">{{ preview }}</div>
+
+            <div class="clicks" title="{{ share['click_count'] }} {{ activity }}{{ '' if share['click_count'] == 1 else 's' }}">
+              <span class="click-number">{{ share['click_count'] }}</span>
+              <span class="click-label">{{ activity }}{{ '' if share['click_count'] == 1 else 's' }}</span>
+            </div>
+
+            <div class="created">
+              <time datetime="{{ share['created_at'] }}">{{ share['created_at']|friendly_date }}</time>
+              {% if share['last_clicked_at'] %}
+                <span class="last-click">Last {{ activity }} {{ share['last_clicked_at']|friendly_date }}</span>
+              {% endif %}
+            </div>
+
+            <div class="row-actions">
+              <button
+                class="icon-button copy-button"
+                type="button"
+                data-copy="{{ short_base }}/{{ share['code'] }}"
+                aria-label="Copy short link {{ short_base }}/{{ share['code'] }}"
+                title="Copy short link"
+              >
+                <svg class="icon-copy" viewBox="0 0 20 20" aria-hidden="true">
+                  <rect x="7" y="7" width="9" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M13 7V5.5A1.5 1.5 0 0 0 11.5 4h-7A1.5 1.5 0 0 0 3 5.5v7A1.5 1.5 0 0 0 4.5 14H7" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+                <svg class="icon-check" viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M4 10.5 8 14l8-8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+
+              <form class="delete-form" method="post" action="{{ url_for('delete_share', code=share['code']) }}" data-confirm="Delete /{{ share['code'] }}? This cannot be undone.">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                <button class="icon-button delete-button" type="submit" aria-label="Delete /{{ share['code'] }}" title="Delete share">
+                  <svg viewBox="0 0 20 20" aria-hidden="true">
+                    <path d="M4 6h12M8 3.5h4M6 6l.6 9.2A1.5 1.5 0 0 0 8.1 16.5h3.8a1.5 1.5 0 0 0 1.5-1.3L14 6M8.5 9v4.5M11.5 9v4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </form>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-grid" aria-hidden="true">
+          <span></span><span></span><span></span>
+          <span></span><span class="empty-grid-accent"></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+        <h3>Nothing on the grid yet.</h3>
+        <p>Your first short link or text drop will show up here, ready to copy and share.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  <p class="copy-announcement sr-only" aria-live="polite"></p>
+{% endblock %}

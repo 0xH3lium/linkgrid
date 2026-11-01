@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Share not found · LinkGrid{% endblock %}
+
+{% block content %}
+  <section class="not-found">
+    <p class="not-found-code" aria-hidden="true">404</p>
+    <p class="eyebrow"><span></span> Off the grid</p>
+    <h1>That share isn't here.</h1>
+    <p class="lede">It may have been deleted, or the address may be a little off. Check the link and try again.</p>
+    <a class="primary-button home-button" href="{{ url_for('index') }}">
+      <span>Back to LinkGrid</span>
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </section>
+{% endblock %}

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="LinkGrid is a small, self-hosted link and text shortener.">
+  <title>{% block title %}LinkGrid{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page">
+    <header class="site-header">
+      <a class="brand" href="{{ url_for('index') }}" aria-label="LinkGrid home">
+        <span class="brand-mark" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </span>
+        <span class="brand-name">LinkGrid</span>
+      </a>
+      <span class="status"><span class="status-dot" aria-hidden="true"></span> linkgrid is up</span>
+    </header>
+
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+      <span>Links and text, kept simple.</span>
+      <a href="{{ url_for('healthz') }}">Service status</a>
+    </footer>
+  </div>
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>

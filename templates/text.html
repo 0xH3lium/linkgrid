@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Shared text · LinkGrid{% endblock %}
+
+{% block content %}
+  <section class="text-page">
+    <a class="back-link" href="{{ url_for('index') }}">
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <path d="M16 10H5M9 5l-5 5 5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Back to LinkGrid</span>
+    </a>
+
+    <header class="text-page-head">
+      <p class="eyebrow"><span></span> Shared on LinkGrid</p>
+      <h1>A text drop.</h1>
+      <div class="text-meta">
+        <time datetime="{{ share['created_at'] }}">{{ share['created_at']|friendly_date }}</time>
+        <span class="meta-separator" aria-hidden="true"></span>
+        <span>{{ share['click_count'] }} view{{ '' if share['click_count'] == 1 else 's' }}</span>
+        <span class="meta-separator" aria-hidden="true"></span>
+        <span class="text-short-url">{{ short_base }}/{{ share['code'] }}</span>
+      </div>
+    </header>
+
+    <article class="text-card">
+      <div class="text-card-toolbar">
+        <span class="text-label">Plain text</span>
+        <button
+          class="copy-text-button"
+          type="button"
+          data-copy-target="#shared-text"
+          aria-label="Copy shared text"
+          title="Copy text"
+        >
+          <svg class="icon-copy" viewBox="0 0 20 20" aria-hidden="true">
+            <rect x="7" y="7" width="9" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M13 7V5.5A1.5 1.5 0 0 0 11.5 4h-7A1.5 1.5 0 0 0 3 5.5v7A1.5 1.5 0 0 0 4.5 14H7" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+          <svg class="icon-check" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M4 10.5 8 14l8-8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="copy-label">Copy text</span>
+        </button>
+      </div>
+      <div class="shared-text" id="shared-text">{{ share['text_content'] }}</div>
+    </article>
+
+    <p class="text-page-note">Shared with <a href="{{ url_for('index') }}">LinkGrid</a>.</p>
+  </section>
+
+  <p class="copy-announcement sr-only" aria-live="polite"></p>
+{% endblock %}
