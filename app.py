@@ -116,6 +116,10 @@ def init_db(database: str) -> None:
             )
         if "text_content" not in columns:
             connection.execute("ALTER TABLE links ADD COLUMN text_content TEXT")
+        if "owner_id" not in columns:
+            connection.execute(
+                "ALTER TABLE links ADD COLUMN owner_id TEXT NOT NULL DEFAULT ''"
+            )
         connection.commit()
     finally:
         connection.close()
@@ -205,12 +209,22 @@ def short_base_url() -> str:
     return current_app.config["SHORT_BASE_URL"] or request.host_url.rstrip("/")
 
 
+def current_owner() -> str:
+    """Return the per-browser owner id, creating it on first use."""
+    owner = session.get("owner_id")
+    if not owner:
+        owner = secrets.token_urlsafe(16)
+        session["owner_id"] = owner
+    return owner
+
+
 def insert_share(
     code: str,
     *,
     kind: str,
     target_url: str = "",
     text_content: str | None = None,
+    owner_id: str = "",
 ) -> bool:
     """Insert a link or text share. Return False when the code exists."""
     # target_url is non-null for compatibility with databases from the first
@@ -218,9 +232,9 @@ def insert_share(
     try:
         get_db().execute(
             "INSERT INTO links "
-            "(code, kind, target_url, text_content, created_at) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (code, kind, target_url, text_content, utc_now()),
+            "(code, kind, target_url, text_content, created_at, owner_id) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (code, kind, target_url, text_content, utc_now(), owner_id),
         )
         get_db().commit()
         return True
@@ -281,7 +295,8 @@ def register_routes(app: Flask) -> None:
         shares = get_db().execute(
             "SELECT id, code, kind, target_url, text_content, created_at, "
             "click_count, last_clicked_at "
-            "FROM links ORDER BY created_at DESC, id DESC"
+            "FROM links WHERE owner_id = ? ORDER BY created_at DESC, id DESC",
+            (current_owner(),),
         ).fetchall()
         return (
             render_template(
@@ -319,6 +334,7 @@ def register_routes(app: Flask) -> None:
                 kind=kind,
                 target_url=target_url,
                 text_content=text_content,
+                owner_id=current_owner(),
             )
 
         if custom_code:
@@ -367,10 +383,17 @@ def register_routes(app: Flask) -> None:
     @admin_required
     def delete_share(code: str):
         share = get_db().execute(
-            "SELECT kind FROM links WHERE code = ?", (code,)
+            "SELECT kind FROM links WHERE code = ? AND owner_id = ?",
+            (code, current_owner()),
         ).fetchone()
-        mode = share["kind"] if share else "url"
-        get_db().execute("DELETE FROM links WHERE code = ?", (code,))
+        if share is None:
+            flash("That share does not exist.", "error")
+            return redirect(url_for("index"), code=303)
+        mode = share["kind"]
+        get_db().execute(
+            "DELETE FROM links WHERE code = ? AND owner_id = ?",
+            (code, current_owner()),
+        )
         get_db().commit()
         flash(f"Deleted /{code}.", "success")
         return redirect(url_for("index", mode=mode), code=303)

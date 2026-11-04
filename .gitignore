@@ -8,3 +8,4 @@ instance/
 *.db-wal
 .env
 .pytest_cache/
+linkgrid.env

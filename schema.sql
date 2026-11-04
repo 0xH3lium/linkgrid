@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS links (
     text_content TEXT,
     created_at TEXT NOT NULL,
     click_count INTEGER NOT NULL DEFAULT 0,
-    last_clicked_at TEXT
+    last_clicked_at TEXT,
+    owner_id TEXT NOT NULL DEFAULT ''
 );
 
 CREATE INDEX IF NOT EXISTS idx_links_created_at
